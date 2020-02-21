@@ -11,6 +11,7 @@ import org.knowm.xchange.Exchange;
 import org.knowm.xchange.coinbase.v2.Coinbase;
 import org.knowm.xchange.coinbase.v2.dto.account.CoinbaseAccountData.CoinbaseAccount;
 import org.knowm.xchange.coinbase.v2.dto.account.CoinbasePaymentMethodsData.CoinbasePaymentMethod;
+import org.knowm.xchange.coinbase.v2.dto.account.CoinbaseTransactionsResponse;
 import org.knowm.xchange.currency.Currency;
 
 public class CoinbaseAccountServiceRaw extends CoinbaseBaseService {
@@ -19,7 +20,7 @@ public class CoinbaseAccountServiceRaw extends CoinbaseBaseService {
     super(exchange);
   }
 
-  public Map getTransactions(String accountId) throws IOException {
+  public CoinbaseTransactionsResponse getTransactions(String accountId) throws IOException {
     String apiKey = exchange.getExchangeSpecification().getApiKey();
     BigDecimal timestamp = coinbase.getTime(Coinbase.CB_VERSION_VALUE).getData().getEpoch();
 
