@@ -35,6 +35,7 @@ import org.knowm.xchange.bitfinex.v1.dto.trade.BitfinexAccountInfosResponse;
 import org.knowm.xchange.bitfinex.v1.dto.trade.BitfinexOrderFlags;
 import org.knowm.xchange.bitfinex.v1.dto.trade.BitfinexOrderStatusResponse;
 import org.knowm.xchange.bitfinex.v1.dto.trade.BitfinexTradeResponse;
+import org.knowm.xchange.bitfinex.v2.dto.account.Movement;
 import org.knowm.xchange.bitfinex.v2.dto.marketdata.BitfinexPublicTrade;
 import org.knowm.xchange.bitfinex.v2.dto.marketdata.BitfinexTickerFundingCurrency;
 import org.knowm.xchange.bitfinex.v2.dto.marketdata.BitfinexTickerTraidingPair;
@@ -57,8 +58,8 @@ import org.knowm.xchange.dto.meta.CurrencyPairMetaData;
 import org.knowm.xchange.dto.meta.ExchangeMetaData;
 import org.knowm.xchange.dto.trade.FixedRateLoanOrder;
 import org.knowm.xchange.dto.trade.FloatingRateLoanOrder;
-import org.knowm.xchange.dto.trade.MarketOrder;
 import org.knowm.xchange.dto.trade.LimitOrder;
+import org.knowm.xchange.dto.trade.MarketOrder;
 import org.knowm.xchange.dto.trade.OpenOrders;
 import org.knowm.xchange.dto.trade.StopOrder;
 import org.knowm.xchange.dto.trade.UserTrade;
@@ -422,19 +423,19 @@ public final class BitfinexAdapters {
       OrderStatus status = adaptOrderStatus(order);
       CurrencyPair currencyPair = adaptCurrencyPair(order.getSymbol());
       Date timestamp = convertBigDecimalTimestampToDate(order.getTimestamp());
-      
+
       Supplier<MarketOrder> marketOrderCreator =
-        () ->
-            new MarketOrder(
-                orderType,
-                order.getOriginalAmount(),
-                currencyPair,
-                String.valueOf(order.getId()),
-                timestamp,
-                order.getAvgExecutionPrice(),
-                order.getExecutedAmount(),
-                null,
-                status);
+          () ->
+              new MarketOrder(
+                  orderType,
+                  order.getOriginalAmount(),
+                  currencyPair,
+                  String.valueOf(order.getId()),
+                  timestamp,
+                  order.getAvgExecutionPrice(),
+                  order.getExecutedAmount(),
+                  null,
+                  status);
 
       Supplier<LimitOrder> limitOrderCreator =
           () ->
@@ -541,7 +542,7 @@ public final class BitfinexAdapters {
         hiddenOrders.add(stopOrder);
       } else if (marketOrder != null) {
         hiddenOrders.add(marketOrder);
-      }      
+      }
     }
 
     return new OpenOrders(limitOrders, hiddenOrders);
@@ -746,6 +747,51 @@ public final class BitfinexAdapters {
                             oldMetaData.getFeeTiers())));
 
     return exchangeMetaData;
+  }
+
+  public static List<FundingRecord> adaptFundingHistory(List<Movement> movementHistorys) {
+    final List<FundingRecord> fundingRecords = new ArrayList<>();
+    for (Movement movement : movementHistorys) {
+      Currency currency = Currency.getInstance(movement.getCurency());
+
+      FundingRecord.Type type =
+          movement.getAmount().compareTo(BigDecimal.ZERO) < 0
+              ? FundingRecord.Type.WITHDRAWAL
+              : FundingRecord.Type.DEPOSIT;
+
+      FundingRecord.Status status = FundingRecord.Status.resolveStatus(movement.getStatus());
+      if (status == null
+          && movement
+              .getStatus()
+              .equalsIgnoreCase("CANCELED")) // there's a spelling mistake in the protocol
+      status = FundingRecord.Status.CANCELLED;
+
+      BigDecimal amount = movement.getAmount().abs();
+      BigDecimal fee = movement.getFees().abs();
+      if(fee != null && type.isOutflowing()){
+        //The amount reported form Bitfinex on a withdrawal is without the fee, so it has to be added to get the full amount withdrawn from the wallet
+        //Deposits don't seem to have fees, but it seems reasonable to assume that the reported value is the full amount added to the wallet
+        amount = amount.add(fee);
+      }
+
+      FundingRecord fundingRecordEntry =
+          new FundingRecord(
+              movement.getDestinationAddress(),
+              null,
+              movement.getMtsUpdated(),
+              currency,
+              amount,
+              movement.getId(),
+              movement.getTransactionId(),
+              type,
+              status,
+              null,
+              fee,
+              null);
+
+      fundingRecords.add(fundingRecordEntry);
+    }
+    return fundingRecords;
   }
 
   public static List<FundingRecord> adaptFundingHistory(
