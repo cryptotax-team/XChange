@@ -671,8 +671,7 @@ public final class BitfinexAdapters {
 
     final Map<CurrencyPair, CurrencyPairMetaData> currencyPairs =
         exchangeMetaData.getCurrencyPairs();
-    symbolDetails
-        .parallelStream()
+    symbolDetails.parallelStream()
         .forEach(
             bitfinexSymbolDetail -> {
               final CurrencyPair currencyPair = adaptCurrencyPair(bitfinexSymbolDetail.getPair());
@@ -730,9 +729,7 @@ public final class BitfinexAdapters {
     final CurrencyPairMetaData metaData =
         new CurrencyPairMetaData(
             bitfinexAccountInfos[0].getTakerFees().movePointLeft(2), null, null, null, null);
-    currencyPairs
-        .keySet()
-        .parallelStream()
+    currencyPairs.keySet().parallelStream()
         .forEach(
             currencyPair ->
                 currencyPairs.merge(
@@ -768,9 +765,11 @@ public final class BitfinexAdapters {
 
       BigDecimal amount = movement.getAmount().abs();
       BigDecimal fee = movement.getFees().abs();
-      if(fee != null && type.isOutflowing()){
-        //The amount reported form Bitfinex on a withdrawal is without the fee, so it has to be added to get the full amount withdrawn from the wallet
-        //Deposits don't seem to have fees, but it seems reasonable to assume that the reported value is the full amount added to the wallet
+      if (fee != null && type.isOutflowing()) {
+        // The amount reported form Bitfinex on a withdrawal is without the fee, so it has to be
+        // added to get the full amount withdrawn from the wallet
+        // Deposits don't seem to have fees, but it seems reasonable to assume that the reported
+        // value is the full amount added to the wallet
         amount = amount.add(fee);
       }
 
