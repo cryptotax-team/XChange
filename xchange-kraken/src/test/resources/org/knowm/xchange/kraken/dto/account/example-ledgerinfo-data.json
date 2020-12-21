@@ -82,8 +82,28 @@
         "amount": "0.01847200",
         "fee": "0.0000000000",
         "balance": "130.44704300"
+      },
+      "LQWTFE-VA6HT-XD2EM3": {
+        "refid": "TSFW5EB-ZSXXC-6KM2GG",
+        "time": 1602696660.0371,
+        "type": "spend",
+        "aclass": "currency",
+        "asset": "ZEUR",
+        "amount": "-481.0000",
+        "fee": "0.0000000000",
+        "balance": "0.0000000000"
+      },
+      "LTGVGD-2TD44-MSIIGM": {
+        "refid": "TSFW5EB-ZSXXC-6KM2GG",
+        "time": 1602696660.0371,
+        "type": "receive",
+        "aclass": "currency",
+        "asset": "XXBT",
+        "amount": "0.0490058600",
+        "fee": "0.0000000000",
+        "balance": "0.0490094100"
       }
     },
-    "count": "8"
+    "count": "10"
   }
 }
